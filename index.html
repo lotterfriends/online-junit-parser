@@ -4,8 +4,8 @@
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="https://oxal.org/projects/sakura/demo/normalize.css">
-  <link rel="stylesheet" href="https://oxal.org/projects/sakura/demo/sakura-dark.css">
+  <link rel="stylesheet" href="https://unpkg.com/normalize.css@8.0.1/normalize.css">
+  <link rel="stylesheet" href="https://unpkg.com/sakura.css/css/sakura-dark.css" type="text/css">
   <script async defer src="https://buttons.github.io/buttons.js"></script>
   <title>Online JUnit Parser</title>
   <meta name="description" content="An online JUnit parser that display the JUnit file in a readable format and convert the JUnit file to json">
@@ -15,6 +15,11 @@
     body { max-width: 55em; }
     textarea { font-size: 12px; }
     pre { font-size: .75em; }
+    em { font-size: .75em; }
+    .testsuite-name, .testcase-name { max-width: 400px;overflow: hidden;display: inline-block;white-space: nowrap;text-overflow: ellipsis;vertical-align: middle; }
+    .testcase-name { max-width:  600px;}
+    .indention { margin-left: 1em;}
+    .buttons { margin-top: 1em;}
   </style>
 </head>
 <body>
@@ -26,7 +31,7 @@
 
   <div id="result"></div>
   
-  <div>
+  <div class="buttons">
     <a class="github-button" href="https://github.com/lotterfriends/online-junit-parser" data-color-scheme="no-preference: light; light: light; dark: light;" data-icon="octicon-star" data-size="large" aria-label="Star lotterfriends/online-junit-parser on GitHub">Star</a>
     <a class="github-button" href="https://github.com/lotterfriends" data-color-scheme="no-preference: light; light: light; dark: light;" data-size="large" aria-label="Follow @lotterfriends on GitHub">Follow @lotterfriends</a>
   </div>
@@ -60,6 +65,7 @@
       function parseTestsuite(testsuiteNodes) {
         return testsuiteNodes.map(testsuite => {
           const testcases = [...testsuite.querySelectorAll(':scope > testcase')];
+          const testsuites = [...testsuite.querySelectorAll(':scope > testsuite')];
           return {
             id: testsuite.getAttribute('id'),
             name: testsuite.getAttribute('name'),
@@ -72,7 +78,8 @@
             tests: testsuite.getAttribute('tests') ? parseInt(testsuite.getAttribute('tests'), 10) : null,
             time: testsuite.getAttribute('time') ? parseFloat(testsuite.getAttribute('time'), 10) : null,
             timestamp: testsuite.getAttribute('timestamp') ? new Date(testsuite.getAttribute('timestamp')) : null,
-            testcases: testcases.length ? parseTestcases(testcases) : []
+            testcases: testcases.length ? parseTestcases(testcases) : [],
+            testsuite: testsuites.length ? parseTestsuite(testsuites) : []
           };
         });
       }
@@ -89,7 +96,7 @@
             errors: testsuites.getAttribute('errors') ? parseInt(testsuites.getAttribute('errors'), 10) : null,
             disabled: testsuites.getAttribute('disabled') ? parseInt(testsuites.getAttribute('disabled'), 10) : null,
             time: testsuites.getAttribute('time') ? parseFloat(testsuites.getAttribute('time')) : null,
-            testsuites: testsuite.length ? parseTestsuite(testsuite) : [],
+            testsuite: testsuite.length ? parseTestsuite(testsuite) : [],
             testcases: testcases.length ? parseTestcases(testcases) : []
           };
         });
@@ -132,13 +139,17 @@
 
       function tpl(result) {
         return `
-          ${result.testsuites ? result.testsuites.map((testsuites, testsuitesIndex) => `
-            <h1 id="testsuites-${testsuitesIndex}">${testsuites.name}</h1>
-            <h2>Tests: ${testsuites.tests}, Failures: ${testsuites.failures}, Errors: ${testsuites.errors}</h2>
-            <em>Time: ${testsuites.time}</em>
-            ${tplTestsuite(testsuites.testsuites)}
+          ${result.testsuites ? result.testsuites.map(testsuites => `
+            ${testsuites.name !== null ? `<h1>${testsuites.name}</h1>` : ''}
+            <h2>
+              ${testsuites.tests !== null ? `Tests: <b>${testsuites.tests}</b>,` : ''}
+              ${testsuites.failures !== null ? `Failures: <b>${testsuites.failures}</b>,` : ''}
+              ${testsuites.errors !== null ? `Errors: <b>${testsuites.errors}</b>,` : ''}
+              ${testsuites.time ? `<em>Time: ${testsuites.time}</em>`: ''}
+            </h2>
+            ${tplTestsuite(testsuites.testsuite)}
           `).join('') : ''}
-          ${result.testsuite ? tplTestsuite(result.testsuites) : ''}
+          ${result.testsuite ? tplTestsuite(result.testsuite) : ''}
           ${result.testcases ? tplTestcases(result.testcases) : ''}
           
         `
@@ -146,22 +157,37 @@
 
       function tplTestsuite(testsuites) {
         return testsuites && testsuites.length ? `
-          ${testsuites.map((testsuite, testsuiteIndex) => `
+          ${testsuites.map(testsuite => `
             <details>
-              <summary>${tplResult(testsuite.failures < 1)} ${testsuite.name} Tests: ${testsuite.tests}, Failures: ${testsuite.failures}, Errors: ${testsuite.errors}, Skipped: ${testsuite.skipped}</summary>
-              <div>${tplTestcases(testsuite.testcases)}</div>
-            </details>
+              <summary>
+                ${tplResult(testsuite.failures < 1)} 
+                ${testsuite.name !== null ? ` <span class="testsuite-name" title="${testsuite.name}">${testsuite.name}</span>` : ''}
+                ${testsuite.tests !== null ? `Tests: <b>${testsuite.tests}</b>,` : ''}
+                ${testsuite.failures !== null ? `Failures: <b>${testsuite.failures}</b>,` : ''}
+                ${testsuite.errors !== null ? `Errors: <b>${testsuite.errors}</b>,` : ''}
+                ${testsuite.skipped !== null ? `Skipped: <b>${testsuite.skipped}</b>,` : ''}
+                ${testsuite.time ? `<em>Time: ${testsuite.time}</em>`: ''}
+              </summary>
+              ${testsuite.testcases && testsuite.testcases.length ? `<div>${tplTestcases(testsuite.testcases)}</div>` : ''}
+              ${testsuite.testsuite && testsuite.testsuite.length ? `<div class="indention">${tplTestsuite(testsuite.testsuite)}</div>` : ''}
+              </details>
             `).join('')}
-          ${testsuites.testcases && testsuites.testcases.length ? `<div>${tplTestcases(testsuites.testcases)}</div>` : ''}
         ` :  '';
       }
 
       function tplTestcases(testcases) {
         return testcases && testcases.length ? `
-          ${testcases.map((testcase, testcaseIndex) => `
-            <details style="margin-left: 1em">
-              <summary>${tplResult(!testcase.failure)}${testcase.name} ${testcase.classname ? testcase.classname : ''} <em>${testcase.time}</em></summary>
-              <div style="margin-left: 1em">
+          ${testcases.map(testcase => `
+            <details class="indention">
+              <summary>
+                ${tplResult(!testcase.failure)}
+                <span class="testcase-name" title=" ${testcase.name ? testcase.name : ''} ${testcase.classname ? testcase.classname : ''}">
+                  ${testcase.name ? testcase.name : ''} 
+                  ${testcase.classname ? testcase.classname : ''}
+                </span>
+                <em>${testcase.time}</em>
+              </summary>
+              <div class="indention">
                 ${testcase.failure ? `
                   <div>
                     ${testcase.failure.type ? `<div>${testcase.failure.type}</div>` : ''}
