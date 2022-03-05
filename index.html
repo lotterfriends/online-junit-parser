@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://oxal.org/projects/sakura/demo/normalize.css">
+  <link rel="stylesheet" href="https://oxal.org/projects/sakura/demo/sakura-dark.css">
+  <title>junit-viewer</title>
+  <style>
+    body { max-width: 55em; }
+    textarea { font-size: 12px; }
+    pre { font-size: .75em; }
+  </style>
+</head>
+<body>
+  <textarea class="xml" placeholder="XML" rows="15"></textarea>
+  <textarea class="json" placeholder="JAVSCRIPT" rows="15"></textarea>
+
+  <div id="result"></div>
+
+  <script>
+
+    (function(){
+
+      function parseTestcases(testcaseNodes) {
+        return testcaseNodes.map(testcase => {
+          const failure = testcase.querySelector('failure') ? testcase.querySelector('failure') : null;
+          const skipped = testcase.querySelector('skipped') ? testcase.querySelector('skipped') : null;
+          const error = testcase.querySelector('error') ? testcase.querySelector('error') : null;
+          return {
+            classname: testcase.getAttribute('classname'),
+            name: testcase.getAttribute('name'),
+            time: testcase.getAttribute('time') ? parseFloat(testcase.getAttribute('time'), 10) : null,
+            skipped: skipped,
+            error: error,
+            failure: failure ? {
+              message: failure.getAttribute('message'),
+              type: failure.getAttribute('type'),
+              content: failure.textContent ? failure.textContent.trim() : ''
+            } : failure,
+            systemOut: testcase.querySelector('system-out') ?  testcase.querySelector('system-out').textContent.trim() : '',
+            systemErr: testcase.querySelector('system-err') ?  testcase.querySelector('system-err').textContent.trim() : '',
+          };
+        });
+      }
+      
+      function parseTestsuite(testsuiteNodes) {
+        return testsuiteNodes.map(testsuite => {
+          const testcases = [...testsuite.querySelectorAll(':scope > testcase')];
+          return {
+            id: testsuite.getAttribute('id'),
+            name: testsuite.getAttribute('name'),
+            package: testsuite.getAttribute('package'),
+            hostname: testsuite.getAttribute('hostname'),
+            disabled: testsuite.getAttribute('disabled') ? parseInt(testsuite.getAttribute('disabled'), 10) : null,
+            failures: testsuite.getAttribute('failures') ? parseInt(testsuite.getAttribute('failures'), 10) : null,
+            errors: testsuite.getAttribute('errors') ? parseInt(testsuite.getAttribute('errors'), 10) : null,
+            skipped: testsuite.getAttribute('skipped') ? parseInt(testsuite.getAttribute('skipped'), 10) : null,
+            tests: testsuite.getAttribute('tests') ? parseInt(testsuite.getAttribute('tests'), 10) : null,
+            time: testsuite.getAttribute('time') ? parseFloat(testsuite.getAttribute('time'), 10) : null,
+            timestamp: testsuite.getAttribute('timestamp') ? new Date(testsuite.getAttribute('timestamp')) : null,
+            testcases: testcases.length ? parseTestcases(testcases) : []
+          };
+        });
+      }
+
+      function parseTestsuites(testsuitesNodes) {
+        return testsuitesNodes.map(testsuites => {
+          const testcases = [...testsuites.querySelectorAll(':scope > testcase')];
+          const testsuite = [...testsuites.querySelectorAll(':scope > testsuite')];
+          return {
+            id: testsuites.getAttribute('id'),
+            name: testsuites.getAttribute('name'),
+            tests: testsuites.getAttribute('tests') ? parseInt(testsuites.getAttribute('tests'), 10) : null,
+            failures: testsuites.getAttribute('failures') ? parseInt(testsuites.getAttribute('failures'), 10) : null,
+            errors: testsuites.getAttribute('errors') ? parseInt(testsuites.getAttribute('errors'), 10) : null,
+            disabled: testsuites.getAttribute('disabled') ? parseInt(testsuites.getAttribute('disabled'), 10) : null,
+            time: testsuites.getAttribute('time') ? parseFloat(testsuites.getAttribute('time')) : null,
+            testsuites: testsuite.length ? parseTestsuite(testsuite) : [],
+            testcases: testcases.length ? parseTestcases(testcases) : []
+          };
+        });
+      }
+    
+    
+      function convertToJson(xmlDoc) {
+        const result = {
+          testsuites: [],
+          testsuite: [],
+          testcases: []
+        };
+        const testsuitesNodes = [...xmlDoc.getElementsByTagName('testsuites')]
+        if (testsuitesNodes && testsuitesNodes.length) {
+          result.testsuites = parseTestsuites(testsuitesNodes);
+        } else {
+          const testsuiteNodes = [...xmlDoc.querySelectorAll(':scope > testsuite')];
+          if (testsuiteNodes && testsuiteNodes.length) {
+            result.testsuite = parseTestsuite(testsuiteNodes);
+          }
+          const testcaseNodes = [...xmlDoc.querySelectorAll(':scope > testcase')];
+          if (testcaseNodes && testcaseNodes.length) {
+            result.testcases = parseTestcases(testcaseNodes);
+          }
+        }
+        return result;
+      }
+
+      function tplFail() {
+        return `<span style="color: red">⛔</span>`;
+      }
+      
+      function tplSuccess() {
+        return `<span style="color: green">✅</span>`;
+      }
+
+      function tplResult(successful) {
+        return successful ? tplSuccess() : tplFail();
+      }
+
+      function tpl(result) {
+        return `
+          ${result.testsuites ? result.testsuites.map((testsuites, testsuitesIndex) => `
+            <h1 id="testsuites-${testsuitesIndex}">${testsuites.name}</h1>
+            <h2>Tests: ${testsuites.tests}, Failures: ${testsuites.failures}, Errors: ${testsuites.errors}</h2>
+            <em>Time: ${testsuites.time}</em>
+            ${tplTestsuite(testsuites.testsuites)}
+          `).join('') : ''}
+          ${result.testsuite ? tplTestsuite(result.testsuites) : ''}
+          ${result.testcases ? tplTestcases(result.testcases) : ''}
+          
+        `
+      }
+
+      function tplTestsuite(testsuites) {
+        return testsuites && testsuites.length ? `
+          ${testsuites.map((testsuite, testsuiteIndex) => `
+            <details>
+              <summary>${tplResult(testsuite.failures < 1)} ${testsuite.name} Tests: ${testsuite.tests}, Failures: ${testsuite.failures}, Errors: ${testsuite.errors}, Skipped: ${testsuite.skipped}</summary>
+              <div>${tplTestcases(testsuite.testcases)}</div>
+            </details>
+            `).join('')}
+          ${testsuites.testcases && testsuites.testcases.length ? `<div>${tplTestcases(testsuites.testcases)}</div>` : ''}
+        ` :  '';
+      }
+
+      function tplTestcases(testcases) {
+        return testcases && testcases.length ? `
+          ${testcases.map((testcase, testcaseIndex) => `
+            <details style="margin-left: 1em">
+              <summary>${tplResult(!testcase.failure)}${testcase.name} ${testcase.classname ? testcase.classname : ''} <em>${testcase.time}</em></summary>
+              <div style="margin-left: 1em">
+                ${testcase.failure ? `
+                  <div>
+                    ${testcase.failure.type ? `<div>${testcase.failure.type}</div>` : ''}
+                    ${testcase.failure.message ? `<div>${testcase.failure.message}</div>` : ''}
+                    ${testcase.failure && testcase.failure.content && testcase.failure.content.length ? `
+                      <div><b>Content:</b></div>
+                      <div><pre>${testcase.failure.content}</pre></div>  
+                    ` : ''}
+                  </div>
+                ` : ''}
+                <div>
+                  ${testcase.systemOut && testcase.systemOut.length ? `
+                    <div><b>System-Out:</b></div>
+                    <div><pre>${testcase.systemOut}</pre></div>  
+                  ` : ''}
+                  ${testcase.systemErr && testcase.systemErr.length ? `
+                    <div><b>System-Err:</b></div>
+                    <div><pre>${testcase.systemErr}</pre></div>  
+                  ` : ''}
+                </div>
+              </div>
+            </details>
+          `).join('')}` : '';
+      }
+
+
+      function refresh(event) {
+        const text = event.target.value;
+        parseText(text);
+      }
+
+      function parseText(text) {
+        localStorage.setItem('xml', text);
+        const parser = new DOMParser();
+        const xmlDoc = parser.parseFromString(text.trim(),"text/xml");
+        const resultAsJson = convertToJson(xmlDoc);
+        document.querySelector('textarea.json').value = JSON.stringify(resultAsJson, null,2);
+        document.querySelector('#result').innerHTML = tpl(resultAsJson);
+      }
+
+      function init() {
+        document.querySelector('textarea.xml').addEventListener('change', refresh);
+        const lsXml = localStorage.getItem('xml');
+        if (lsXml) {
+          document.querySelector('textarea.xml').value = lsXml;
+          parseText(lsXml);
+        }
+      }
+
+      init();
+
+    })();
+
+  </script>
+</body>
+</html>
