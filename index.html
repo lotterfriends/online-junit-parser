@@ -30,7 +30,10 @@
   <textarea class="json" placeholder="JSON" rows="15"></textarea>
 
   <div id="result"></div>
-  
+  <div id="settings">
+    <input name="settingErrorIsFailure" id="settingErrorIsFailure" type="checkbox" checked>
+    <label style="display: inline" for="settingErrorIsFailure">Treat errors as if they were failures.</label>
+  </div>
   <div class="buttons">
     <a class="github-button" href="https://github.com/lotterfriends/online-junit-parser" data-color-scheme="no-preference: light; light: light; dark: light;" data-icon="octicon-star" data-size="large" aria-label="Star lotterfriends/online-junit-parser on GitHub">Star</a>
     <a class="github-button" href="https://github.com/lotterfriends" data-color-scheme="no-preference: light; light: light; dark: light;" data-size="large" aria-label="Follow @lotterfriends on GitHub">Follow @lotterfriends</a>
@@ -50,7 +53,7 @@
             name: testcase.getAttribute('name'),
             time: testcase.getAttribute('time') ? parseFloat(testcase.getAttribute('time'), 10) : null,
             skipped: skipped,
-            error: error,
+            error: error && error.textContent ? error.textContent.trim() : '',
             failure: failure ? {
               message: failure.getAttribute('message'),
               type: failure.getAttribute('type'),
@@ -133,8 +136,8 @@
         return `<span style="color: green">✅</span>`;
       }
 
-      function tplResult(successful) {
-        return successful ? tplSuccess() : tplFail();
+      function tplResult(isFailing) {
+        return isFailing ? tplFail() : tplSuccess();
       }
 
       function tpl(result) {
@@ -155,12 +158,28 @@
         `
       }
 
+      function isFailing(testObject) {
+        const errorIsFailure = document.getElementById('settingErrorIsFailure').checked; 
+        if (testObject.failure && testObject.failures > 0) {
+          return true;
+        }
+        if (errorIsFailure) {
+          if (testObject.errors && testObject.errors > 0) {
+            return true;
+          } 
+          if (testObject.error && testObject.error.length) {
+            return true;
+          } 
+        }
+        return false;
+      }
+
       function tplTestsuite(testsuites) {
         return testsuites && testsuites.length ? `
           ${testsuites.map(testsuite => `
             <details>
               <summary>
-                ${tplResult(testsuite.failures < 1)} 
+                ${tplResult(isFailing(testsuite))} 
                 ${testsuite.name !== null ? ` <span class="testsuite-name" title="${testsuite.name}">${testsuite.name}</span>` : ''}
                 ${testsuite.tests !== null ? `Tests: <b>${testsuite.tests}</b>,` : ''}
                 ${testsuite.failures !== null ? `Failures: <b>${testsuite.failures}</b>,` : ''}
@@ -180,7 +199,7 @@
           ${testcases.map(testcase => `
             <details class="indention">
               <summary>
-                ${tplResult(!testcase.failure)}
+                ${tplResult(isFailing(testcase))}
                 <span class="testcase-name" title=" ${testcase.name ? testcase.name : ''} ${testcase.classname ? testcase.classname : ''}">
                   ${testcase.name ? testcase.name : ''} 
                   ${testcase.classname ? testcase.classname : ''}
@@ -197,6 +216,9 @@
                       <div><pre>${testcase.failure.content}</pre></div>  
                     ` : ''}
                   </div>
+                ` : ''}
+                ${testcase.error && testcase.error.length ? `
+                  <div><pre>${testcase.error}</pre></div>
                 ` : ''}
                 <div>
                   ${testcase.systemOut && testcase.systemOut.length ? `
@@ -215,12 +237,13 @@
 
 
       function refresh(event) {
-        const text = event.target.value;
+        const text = document.querySelector('textarea.xml').value;
         parseText(text);
       }
 
       function parseText(text) {
         localStorage.setItem('xml', text);
+        localStorage.setItem('settingErrorIsFailure', `${document.getElementById('settingErrorIsFailure').checked}`);
         const parser = new DOMParser();
         const xmlDoc = parser.parseFromString(text.trim(),"text/xml");
         const resultAsJson = convertToJson(xmlDoc);
@@ -230,6 +253,12 @@
 
       function init() {
         document.querySelector('textarea.xml').addEventListener('change', refresh);
+        document.querySelector('#settingErrorIsFailure').addEventListener('change', refresh);
+        const settingErrorIsFailureStorage = localStorage.getItem('settingErrorIsFailure');
+        const settingErrorIsFailur = false;
+        if (settingErrorIsFailureStorage && settingErrorIsFailureStorage === 'true') {
+          document.getElementById('settingErrorIsFailure').checked = true;
+        }
         const lsXml = localStorage.getItem('xml');
         if (lsXml) {
           document.querySelector('textarea.xml').value = lsXml;
