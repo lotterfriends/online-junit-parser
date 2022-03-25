@@ -18,7 +18,6 @@
     em { font-size: .75em; }
     .testsuite-name, .testcase-name { max-width: 400px;overflow: hidden;display: inline-block;white-space: nowrap;text-overflow: ellipsis;vertical-align: middle; }
     .testcase-name { max-width:  600px;}
-    .indention { margin-left: 1em;}
     .buttons { margin-top: 1em;}
   </style>
 </head>
@@ -27,8 +26,21 @@
   <h1>Online JUnit Parser</h1>
   
   <textarea class="xml" placeholder="XML" rows="15"></textarea>
-  <textarea class="json" placeholder="JSON" rows="15"></textarea>
 
+  <details>
+    <summary>JSON</summary>
+    <div>
+      <textarea class="json" placeholder="JSON" rows="15"></textarea>
+    </div>
+  </details>
+
+  <details>
+    <summary>HTML</summary>
+    <div>
+      <textarea class="html" placeholder="HTML" rows="15"></textarea>
+    </div>
+  </details>
+  
   <div id="result"></div>
   <div id="settings">
     <input name="settingErrorIsFailure" id="settingErrorIsFailure" type="checkbox" checked>
@@ -188,7 +200,7 @@
                 ${testsuite.time ? `<em>Time: ${testsuite.time}</em>`: ''}
               </summary>
               ${testsuite.testcases && testsuite.testcases.length ? `<div>${tplTestcases(testsuite.testcases)}</div>` : ''}
-              ${testsuite.testsuite && testsuite.testsuite.length ? `<div class="indention">${tplTestsuite(testsuite.testsuite)}</div>` : ''}
+              ${testsuite.testsuite && testsuite.testsuite.length ? `<div style="margin-left: 1em">${tplTestsuite(testsuite.testsuite)}</div>` : ''}
               </details>
             `).join('')}
         ` :  '';
@@ -197,7 +209,7 @@
       function tplTestcases(testcases) {
         return testcases && testcases.length ? `
           ${testcases.map(testcase => `
-            <details class="indention">
+            <details style="margin-left: 1em">
               <summary>
                 ${tplResult(isFailing(testcase))}
                 <span class="testcase-name" title=" ${testcase.name ? testcase.name : ''} ${testcase.classname ? testcase.classname : ''}">
@@ -206,7 +218,7 @@
                 </span>
                 <em>${testcase.time}</em>
               </summary>
-              <div class="indention">
+              <div style="margin-left: 1em">
                 ${testcase.failure ? `
                   <div>
                     ${testcase.failure.type ? `<div>${testcase.failure.type}</div>` : ''}
@@ -249,6 +261,7 @@
         const resultAsJson = convertToJson(xmlDoc);
         document.querySelector('textarea.json').value = JSON.stringify(resultAsJson, null,2);
         document.querySelector('#result').innerHTML = tpl(resultAsJson);
+        document.querySelector('textarea.html').value = document.querySelector('#result').innerHTML.trim();
       }
 
       function init() {
