@@ -19,6 +19,7 @@
     .testsuite-name, .testcase-name { max-width: 400px;overflow: hidden;display: inline-block;white-space: nowrap;text-overflow: ellipsis;vertical-align: middle; }
     .testcase-name { max-width:  600px;}
     .buttons { margin-top: 1em;}
+    .copy-link { float:right; margin-top: -2em;}
   </style>
 </head>
 <body>
@@ -30,6 +31,7 @@
   <details>
     <summary>JSON</summary>
     <div>
+      <a class="copy-link" onclick="copyTextToClipboard(document.querySelector('textarea.json'))" href="#">Copy to Clipboard</a>
       <textarea class="json" placeholder="JSON" rows="15"></textarea>
     </div>
   </details>
@@ -37,6 +39,7 @@
   <details>
     <summary>HTML</summary>
     <div>
+      <a class="copy-link" onclick="copyTextToClipboard(document.querySelector('textarea.html'))" href="#">Copy to Clipboard</a>
       <textarea class="html" placeholder="HTML" rows="15"></textarea>
     </div>
   </details>
@@ -54,6 +57,19 @@
   <script>
 
     (function(){
+
+      function copyTextToClipboard(textArea) {
+        textArea.focus();
+        textArea.select();
+
+        try {
+          const success = document.execCommand('copy');
+        } catch (err) {
+          console.log('unable to copy');
+        }
+      }
+      // to allow usage in onclick
+      window.copyTextToClipboard = copyTextToClipboard;
 
       function parseTestcases(testcaseNodes) {
         return testcaseNodes.map(testcase => {
