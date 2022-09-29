@@ -86,7 +86,7 @@
           };
         });
       }
-      
+
       function parseTestsuite(testsuiteNodes) {
         return testsuiteNodes.map(testsuite => {
           const testcases = [...testsuite.querySelectorAll(':scope > testcase')];
@@ -126,8 +126,7 @@
           };
         });
       }
-    
-    
+
       function convertToJson(xmlDoc) {
         const result = {
           testsuites: [],
@@ -153,7 +152,7 @@
       function tplFail() {
         return `<span style="color: red">⛔</span>`;
       }
-      
+
       function tplSuccess() {
         return `<span style="color: green">✅</span>`;
       }
@@ -176,22 +175,22 @@
           `).join('') : ''}
           ${result.testsuite ? tplTestsuite(result.testsuite) : ''}
           ${result.testcases ? tplTestcases(result.testcases) : ''}
-          
+
         `
       }
 
       function isFailing(testObject) {
-        const errorIsFailure = document.getElementById('settingErrorIsFailure').checked; 
+        const errorIsFailure = document.getElementById('settingErrorIsFailure').checked;
         if (testObject.failure && testObject.failures > 0) {
           return true;
         }
         if (errorIsFailure) {
           if (testObject.errors && testObject.errors > 0) {
             return true;
-          } 
+          }
           if (testObject.error && testObject.error.length) {
             return true;
-          } 
+          }
         }
         return false;
       }
@@ -201,7 +200,7 @@
           ${testsuites.map(testsuite => `
             <details>
               <summary>
-                ${tplResult(isFailing(testsuite))} 
+                ${tplResult(isFailing(testsuite))}
                 ${testsuite.name !== null ? ` <span class="testsuite-name" title="${testsuite.name}">${testsuite.name}</span>` : ''}
                 ${testsuite.tests !== null ? `Tests: <b>${testsuite.tests}</b>,` : ''}
                 ${testsuite.failures !== null ? `Failures: <b>${testsuite.failures}</b>,` : ''}
@@ -223,7 +222,7 @@
               <summary>
                 ${tplResult(isFailing(testcase))}
                 <span class="testcase-name" title=" ${testcase.name ? testcase.name : ''} ${testcase.classname ? testcase.classname : ''}">
-                  ${testcase.name ? testcase.name : ''} 
+                  ${testcase.name ? testcase.name : ''}
                   ${testcase.classname ? testcase.classname : ''}
                 </span>
                 <em>${testcase.time}</em>
@@ -235,7 +234,7 @@
                     ${testcase.failure.message ? `<div>${testcase.failure.message}</div>` : ''}
                     ${testcase.failure && testcase.failure.content && testcase.failure.content.length ? `
                       <div><b>Content:</b></div>
-                      <div><pre>${testcase.failure.content}</pre></div>  
+                      <div><pre>${testcase.failure.content}</pre></div>
                     ` : ''}
                   </div>
                 ` : ''}
@@ -245,18 +244,17 @@
                 <div>
                   ${testcase.systemOut && testcase.systemOut.length ? `
                     <div><b>System-Out:</b></div>
-                    <div><pre>${testcase.systemOut}</pre></div>  
+                    <div><pre>${testcase.systemOut}</pre></div>
                   ` : ''}
                   ${testcase.systemErr && testcase.systemErr.length ? `
                     <div><b>System-Err:</b></div>
-                    <div><pre>${testcase.systemErr}</pre></div>  
+                    <div><pre>${testcase.systemErr}</pre></div>
                   ` : ''}
                 </div>
               </div>
             </details>
           `).join('')}` : '';
       }
-
 
       function refresh(event) {
         const text = document.querySelector('textarea.xml').value;
