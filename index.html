@@ -6,7 +6,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="https://unpkg.com/normalize.css@8.0.1/normalize.css">
   <link rel="stylesheet" href="https://unpkg.com/sakura.css/css/sakura-dark.css" type="text/css">
-  <script async defer src="https://buttons.github.io/buttons.js"></script>
   <title>Online JUnit Parser</title>
   <meta name="description" content="An online JUnit parser that display the JUnit file in a readable format and convert the JUnit file to json">
   <meta name="keywords" content="JUnit, JSON, Parser, online">
@@ -18,7 +17,6 @@
     em { font-size: .75em; }
     .testsuite-name, .testcase-name { max-width: 400px;overflow: hidden;display: inline-block;white-space: nowrap;text-overflow: ellipsis;vertical-align: middle; }
     .testcase-name { max-width:  600px;}
-    .buttons { margin-top: 1em;}
     .copy-link { float:right; margin-top: -2em;}
   </style>
 </head>
@@ -48,10 +46,6 @@
   <div id="settings">
     <input name="settingErrorIsFailure" id="settingErrorIsFailure" type="checkbox" checked>
     <label style="display: inline" for="settingErrorIsFailure">Treat errors as if they were failures.</label>
-  </div>
-  <div class="buttons">
-    <a class="github-button" href="https://github.com/lotterfriends/online-junit-parser" data-color-scheme="no-preference: light; light: light; dark: light;" data-icon="octicon-star" data-size="large" aria-label="Star lotterfriends/online-junit-parser on GitHub">Star</a>
-    <a class="github-button" href="https://github.com/lotterfriends" data-color-scheme="no-preference: light; light: light; dark: light;" data-size="large" aria-label="Follow @lotterfriends on GitHub">Follow @lotterfriends</a>
   </div>
 
   <script>
