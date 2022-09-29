@@ -206,12 +206,13 @@
 
   function refresh(event) {
     const text = document.querySelector('textarea.xml').value;
+    localStorage.setItem('xml', text);
+    localStorage.setItem('settingErrorIsFailure',
+      `${document.getElementById('settingErrorIsFailure').checked}`);
     parseText(text);
   }
 
   function parseText(text) {
-    localStorage.setItem('xml', text);
-    localStorage.setItem('settingErrorIsFailure', `${document.getElementById('settingErrorIsFailure').checked}`);
     const parser = new DOMParser();
     const xmlDoc = parser.parseFromString(text.trim(),"text/xml");
     const resultAsJson = convertToJson(xmlDoc);
