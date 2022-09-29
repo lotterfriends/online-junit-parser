@@ -15,7 +15,7 @@ body {
   line-height: 1.618;
   max-width: 38em;
   margin: auto;
-  color: #c9c9c9;
+  color: #ffffff;
   background-color: #222222;
   padding: 13px;
 }
@@ -87,7 +87,7 @@ a:visited {
   color: #e6e6e6;
 }
 a:hover {
-  color: #c9c9c9;
+  color: #ffffff;
   border-bottom: 2px solid #c9c9c9;
 }
 
@@ -198,7 +198,7 @@ textarea {
 }
 
 textarea, select, input {
-  color: #c9c9c9;
+  color: #ffffff;
   padding: 6px 10px; /* The 6px vertically centers text on FF, ignored by Webkit */
   margin-bottom: 10px;
   background-color: #4a4a4a;
