@@ -22,7 +22,9 @@
         classname: testcase.getAttribute('classname'),
         name: testcase.getAttribute('name'),
         time: testcase.getAttribute('time') ? parseFloat(testcase.getAttribute('time'), 10) : null,
-        skipped: skipped,
+        skipped: skipped ? {
+          message: skipped.getAttribute('message'),
+        } : null,
         error: error && error.textContent ? error.textContent.trim() : '',
         failure: failure ? {
           message: failure.getAttribute('message'),
