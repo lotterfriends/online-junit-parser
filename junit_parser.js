@@ -212,6 +212,19 @@
     parseText(text);
   }
 
+  function processFile(evt) {
+    if (evt.target.files.length < 1) {
+      console.log('invalid files length: ' + evt.target.files.length);
+      return;
+    }
+    const fr = new FileReader();
+    fr.onload = (ev) => {
+      document.querySelector('textarea.xml').value = ev.target.result;
+      refresh();
+    };
+    fr.readAsText(evt.target.files[0]);
+  }
+
   function parseText(text) {
     const parser = new DOMParser();
     const xmlDoc = parser.parseFromString(text.trim(),"text/xml");
@@ -224,6 +237,7 @@
   function init() {
     document.querySelector('textarea.xml').addEventListener('change', refresh);
     document.querySelector('#settingErrorIsFailure').addEventListener('change', refresh);
+    document.querySelector('#file').addEventListener('change', processFile);
     const settingErrorIsFailureStorage = localStorage.getItem('settingErrorIsFailure');
     const settingErrorIsFailur = false;
     if (settingErrorIsFailureStorage && settingErrorIsFailureStorage === 'true') {
