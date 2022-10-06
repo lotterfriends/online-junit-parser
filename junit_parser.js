@@ -90,18 +90,6 @@
     return result;
   }
 
-  function tplFail() {
-    return `<span style="color: red">⛔</span>`;
-  }
-
-  function tplSuccess() {
-    return `<span style="color: green">✅</span>`;
-  }
-
-  function tplResult(isFailing) {
-    return isFailing ? tplFail() : tplSuccess();
-  }
-
   function tplHeader(testsuites) {
     return `${testsuites.name !== null ? `<h1>${testsuites.name}</h1>` : ''}
       <h2>
@@ -119,20 +107,13 @@
     ).join('');
   }
 
-  function isFailing(testObject) {
+  function tplSuiteResult(testsuite) {
     const errorIsFailure = document.getElementById('settingErrorIsFailure').checked;
-    if (testObject.failure || testObject.failures > 0) {
-      return true;
+    if ((testsuite.failures > 0)
+      || (errorIsFailure && testsuite.errors && testsuite.errors > 0)) {
+      return `<span style="color: red">⛔</span>`;
     }
-    if (errorIsFailure) {
-      if (testObject.errors && testObject.errors > 0) {
-        return true;
-      }
-      if (testObject.error && testObject.error.length) {
-        return true;
-      }
-    }
-    return false;
+    return `<span style="color: green">✅</span>`;
   }
 
   function tplTestsuite(testsuites) {
@@ -142,7 +123,7 @@
     return testsuites.map(testsuite =>
       `<details>
         <summary>
-          ${tplResult(isFailing(testsuite))}
+          ${tplSuiteResult(testsuite)}
           ${testsuite.name !== null ? ` <span class="testsuite-name" title="${testsuite.name}">${testsuite.name}</span>` : ''}
           ${testsuite.tests !== null ? `Tests: <b>${testsuite.tests}</b>,` : ''}
           ${testsuite.failures !== null ? `Failures: <b>${testsuite.failures}</b>,` : ''}
@@ -155,11 +136,19 @@
     ).join('');
   }
 
+  function tplCaseResult(testcase) {
+    const errorIsFailure = document.getElementById('settingErrorIsFailure').checked;
+    if (testcase.failure || (errorIsFailure && testcase.error)) {
+      return `<span style="color: red">⛔</span>`;
+    }
+    return `<span style="color: green">✅</span>`;
+  }
+
   function tplTestcases(testcases) {
     return testcases.map(testcase =>
       `<details style="margin-left: 1em">
         <summary>
-          ${tplResult(isFailing(testcase))}
+          ${tplCaseResult(testcase)}
           <span class="testcase-name" title=" ${testcase.name ? testcase.name : ''} ${testcase.classname ? testcase.classname : ''}">
             ${testcase.name ? testcase.name : ''}
             ${testcase.classname ? testcase.classname : ''}
