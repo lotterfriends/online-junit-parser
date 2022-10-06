@@ -139,9 +139,14 @@
   function tplCaseResult(testcase) {
     const errorIsFailure = document.getElementById('settingErrorIsFailure').checked;
     if (testcase.failure || (errorIsFailure && testcase.error)) {
-      return `<span style="color: red">⛔</span>`;
+      return `<span title="failed" style="color: red">⛔</span>`;
     }
-    return `<span style="color: green">✅</span>`;
+
+    if (testcase.skipped) {
+      return `<span title="skipped">⏩</span>`;
+    }
+
+    return `<span title="passed" style="color: green">✅</span>`;
   }
 
   function tplTestcases(testcases) {
