@@ -105,19 +105,18 @@
 
   function tplHeader(testsuites) {
     return `${testsuites.name !== null ? `<h1>${testsuites.name}</h1>` : ''}
-        <h2>
-          ${testsuites.tests !== null ? `Tests: <b>${testsuites.tests}</b>,` : ''}
-          ${testsuites.failures !== null ? `Failures: <b>${testsuites.failures}</b>,` : ''}
-          ${testsuites.errors !== null ? `Errors: <b>${testsuites.errors}</b>,` : ''}
-          ${testsuites.time ? `<em>Time: ${testsuites.time}</em>`: ''}
-        </h2>
-      `;
+      <h2>
+        ${testsuites.tests !== null ? `Tests: <b>${testsuites.tests}</b>,` : ''}
+        ${testsuites.failures !== null ? `Failures: <b>${testsuites.failures}</b>,` : ''}
+        ${testsuites.errors !== null ? `Errors: <b>${testsuites.errors}</b>,` : ''}
+        ${testsuites.time ? `<em>Time: ${testsuites.time}</em>`: ''}
+      </h2>`;
   }
 
   function tpl(result) {
     return result.testsuites.map(testsuites =>
       `${testsuites.name ? tplHeader(testsuites) : ''}
-        ${tplTestsuite(testsuites.testsuite)}`
+      ${tplTestsuite(testsuites.testsuite)}`
     ).join('');
   }
 
@@ -143,16 +142,16 @@
     }
     return testsuites.map(testsuite =>
       `<details>
-          <summary>
-            ${tplResult(isFailing(testsuite))}
-            ${testsuite.name !== null ? ` <span class="testsuite-name" title="${testsuite.name}">${testsuite.name}</span>` : ''}
-            ${testsuite.tests !== null ? `Tests: <b>${testsuite.tests}</b>,` : ''}
-            ${testsuite.failures !== null ? `Failures: <b>${testsuite.failures}</b>,` : ''}
-            ${testsuite.errors !== null ? `Errors: <b>${testsuite.errors}</b>,` : ''}
-            ${testsuite.skipped !== null ? `Skipped: <b>${testsuite.skipped}</b>,` : ''}
-            ${testsuite.time ? `<em>Time: ${testsuite.time}</em>`: ''}
-          </summary>
-          ${testsuite.testcases && testsuite.testcases.length ? `<div>${tplTestcases(testsuite.testcases)}</div>` : ''}
+        <summary>
+          ${tplResult(isFailing(testsuite))}
+          ${testsuite.name !== null ? ` <span class="testsuite-name" title="${testsuite.name}">${testsuite.name}</span>` : ''}
+          ${testsuite.tests !== null ? `Tests: <b>${testsuite.tests}</b>,` : ''}
+          ${testsuite.failures !== null ? `Failures: <b>${testsuite.failures}</b>,` : ''}
+          ${testsuite.errors !== null ? `Errors: <b>${testsuite.errors}</b>,` : ''}
+          ${testsuite.skipped !== null ? `Skipped: <b>${testsuite.skipped}</b>,` : ''}
+          ${testsuite.time ? `<em>Time: ${testsuite.time}</em>`: ''}
+        </summary>
+        ${testsuite.testcases && testsuite.testcases.length ? `<div>${tplTestcases(testsuite.testcases)}</div>` : ''}
       </details>`
     ).join('');
   }
@@ -160,39 +159,39 @@
   function tplTestcases(testcases) {
     return testcases.map(testcase =>
       `<details style="margin-left: 1em">
-          <summary>
-            ${tplResult(isFailing(testcase))}
-            <span class="testcase-name" title=" ${testcase.name ? testcase.name : ''} ${testcase.classname ? testcase.classname : ''}">
-              ${testcase.name ? testcase.name : ''}
-              ${testcase.classname ? testcase.classname : ''}
-            </span>
-            <em>${testcase.time}</em>
-          </summary>
-          <div style="margin-left: 1em">
-            ${testcase.failure ? `
-              <div>
-                ${testcase.failure.type ? `<div>${testcase.failure.type}</div>` : ''}
-                ${testcase.failure.message ? `<div>${testcase.failure.message}</div>` : ''}
-                ${testcase.failure && testcase.failure.content && testcase.failure.content.length ? `
-                  <div><b>Content:</b></div>
-                  <div><pre>${testcase.failure.content}</pre></div>
-                ` : ''}
-              </div>
-            ` : ''}
-            ${testcase.error && testcase.error.length ? `
-              <div><pre>${testcase.error}</pre></div>
-            ` : ''}
+        <summary>
+          ${tplResult(isFailing(testcase))}
+          <span class="testcase-name" title=" ${testcase.name ? testcase.name : ''} ${testcase.classname ? testcase.classname : ''}">
+            ${testcase.name ? testcase.name : ''}
+            ${testcase.classname ? testcase.classname : ''}
+          </span>
+          <em>${testcase.time}</em>
+        </summary>
+        <div style="margin-left: 1em">
+          ${testcase.failure ? `
             <div>
-              ${testcase.systemOut && testcase.systemOut.length ? `
-                <div><b>System-Out:</b></div>
-                <div><pre>${testcase.systemOut}</pre></div>
-              ` : ''}
-              ${testcase.systemErr && testcase.systemErr.length ? `
-                <div><b>System-Err:</b></div>
-                <div><pre>${testcase.systemErr}</pre></div>
+              ${testcase.failure.type ? `<div>${testcase.failure.type}</div>` : ''}
+              ${testcase.failure.message ? `<div>${testcase.failure.message}</div>` : ''}
+              ${testcase.failure && testcase.failure.content && testcase.failure.content.length ? `
+                <div><b>Content:</b></div>
+                <div><pre>${testcase.failure.content}</pre></div>
               ` : ''}
             </div>
+          ` : ''}
+          ${testcase.error && testcase.error.length ? `
+            <div><pre>${testcase.error}</pre></div>
+          ` : ''}
+          <div>
+            ${testcase.systemOut && testcase.systemOut.length ? `
+              <div><b>System-Out:</b></div>
+              <div><pre>${testcase.systemOut}</pre></div>
+            ` : ''}
+            ${testcase.systemErr && testcase.systemErr.length ? `
+              <div><b>System-Err:</b></div>
+              <div><pre>${testcase.systemErr}</pre></div>
+            ` : ''}
           </div>
+        </div>
       </details>`
     ).join('');
   }
