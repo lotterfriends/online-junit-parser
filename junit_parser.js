@@ -137,23 +137,41 @@
   }
 
   function tplCaseResult(testcase) {
-    const errorIsFailure = document.getElementById('settingErrorIsFailure').checked;
-    if (testcase.failure || (errorIsFailure && testcase.error)) {
-      return `<span title="failed" style="color: red">⛔</span>`;
+    var o;
+
+    if (testcase.failure) {
+      o = {
+        summary: `<span title="failed" style="color: red">⛔</span>`,
+        details: `<div>
+              ${testcase.failure.type ? `<div>${testcase.failure.type}</div>` : ''}
+              ${testcase.failure.message ? `<div>${testcase.failure.message}</div>` : ''}
+              ${testcase.failure.content && testcase.failure.content.length ?
+                `<div><b>Content:</b></div>
+                <div><pre>${testcase.failure.content}</pre></div>` : ''}
+            </div>`
+      };
+    } else if (testcase.error) {
+      const isF = document.getElementById('settingErrorIsFailure').checked;
+      o = {
+        summary: `<span title="errored" style="color: ${isF ? `red">⛔` : `green">✅`}</span>`,
+        details: testcase.error.length ?
+          `<div><pre>${testcase.error}</pre></div>` : ''
+      };
+    } else if (testcase.skipped) {
+      o = {
+        summary: `<span title="skipped">⏩</span>`,
+        details: ''
+      };
+    } else {
+      o = {
+        summary: `<span title="passed" style="color: green">✅</span>`,
+        details: ''
+      };
     }
 
-    if (testcase.skipped) {
-      return `<span title="skipped">⏩</span>`;
-    }
-
-    return `<span title="passed" style="color: green">✅</span>`;
-  }
-
-  function tplTestcases(testcases) {
-    return testcases.map(testcase =>
-      `<details style="margin-left: 1em">
+    return `<details style="margin-left: 1em">
         <summary>
-          ${tplCaseResult(testcase)}
+          ${o.summary}
           <span class="testcase-name" title=" ${testcase.name ? testcase.name : ''} ${testcase.classname ? testcase.classname : ''}">
             ${testcase.name ? testcase.name : ''}
             ${testcase.classname ? testcase.classname : ''}
@@ -161,19 +179,7 @@
           <em>${testcase.time}</em>
         </summary>
         <div style="margin-left: 1em">
-          ${testcase.failure ? `
-            <div>
-              ${testcase.failure.type ? `<div>${testcase.failure.type}</div>` : ''}
-              ${testcase.failure.message ? `<div>${testcase.failure.message}</div>` : ''}
-              ${testcase.failure && testcase.failure.content && testcase.failure.content.length ? `
-                <div><b>Content:</b></div>
-                <div><pre>${testcase.failure.content}</pre></div>
-              ` : ''}
-            </div>
-          ` : ''}
-          ${testcase.error && testcase.error.length ? `
-            <div><pre>${testcase.error}</pre></div>
-          ` : ''}
+          ${o.details}
           <div>
             ${testcase.systemOut && testcase.systemOut.length ? `
               <div><b>System-Out:</b></div>
@@ -185,8 +191,11 @@
             ` : ''}
           </div>
         </div>
-      </details>`
-    ).join('');
+      </details>`;
+  }
+
+  function tplTestcases(testcases) {
+    return testcases.map(testcase => `${tplCaseResult(testcase)}`).join('');
   }
 
   function refresh(event) {
