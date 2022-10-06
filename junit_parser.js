@@ -121,7 +121,7 @@
 
   function isFailing(testObject) {
     const errorIsFailure = document.getElementById('settingErrorIsFailure').checked;
-    if (testObject.failure && testObject.failures > 0) {
+    if (testObject.failure || testObject.failures > 0) {
       return true;
     }
     if (errorIsFailure) {
