@@ -61,7 +61,6 @@
     return testsuitesNodes.map(testsuites => {
       const testsuite = [...testsuites.querySelectorAll(':scope > testsuite')];
       return {
-        id: testsuites.getAttribute('id'),
         name: testsuites.getAttribute('name'),
         tests: testsuites.getAttribute('tests') ? parseInt(testsuites.getAttribute('tests'), 10) : null,
         failures: testsuites.getAttribute('failures') ? parseInt(testsuites.getAttribute('failures'), 10) : null,
