@@ -170,9 +170,49 @@ QA output created by 656
     );
   }
 
+  function test_multi_suite() {
+    document.querySelector('textarea.xml').value = `
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="multi_suite">
+  <testsuite name="xfstests" failures="0" skipped="0" tests="3" time="3" hostname="rapido1" timestamp="2022-09-29T12:54:02">
+    <testcase classname="xfstests.global" name="generic/001" time="1">
+    </testcase>
+    <testcase classname="xfstests.global" name="generic/002" time="1">
+    </testcase>
+    <testcase classname="xfstests.global" name="generic/656" time="1">
+    </testcase>
+  </testsuite>
+  <testsuite name="xfstests" failures="0" skipped="0" tests="2" time="2" hostname="rapido1" timestamp="2022-09-30T12:54:02">
+    <testcase classname="xfstests.global" name="generic/004" time="1">
+    </testcase>
+    <testcase classname="xfstests.global" name="generic/005" time="1">
+    </testcase>
+  </testsuite>
+</testsuites>`;
+    document.querySelector('textarea.xml').dispatchEvent(new Event('change'));
+    waitForChange(document.querySelector('textarea.html'));
+    const obj = JSON.parse(document.querySelector('textarea.json').value);
+
+    chk("testsuites", obj.testsuites, (o) => {return (o !== null)});
+    chk("testsuites len", obj.testsuites.length, (l) => {return (l === 1)});
+    chk("testsuites name", obj.testsuites[0].name,
+      (n) => {return (n === 'multi_suite')});
+
+    chk("testsuite len", obj.testsuites[0].testsuite,
+      (ts) => {return (ts.length === 2)});
+    chk("testsuite name", obj.testsuites[0].testsuite[0].name,
+      (n) => {return (n === 'xfstests')});
+
+    chk("testcases len", obj.testsuites[0].testsuite[0].testcases.length,
+      (l) => {return (l === 3)});
+    chk("testcases len", obj.testsuites[0].testsuite[1].testcases.length,
+      (l) => {return (l === 2)});
+  }
+
   test_suites_container();
   test_no_suites_container();
   test_syserr_out();
+  test_multi_suite();
 
   chk_summary();
 })();
