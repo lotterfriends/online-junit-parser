@@ -40,7 +40,6 @@
   function parseTestsuite(testsuiteNodes) {
     return testsuiteNodes.map(testsuite => {
       const testcases = [...testsuite.querySelectorAll(':scope > testcase')];
-      const testsuites = [...testsuite.querySelectorAll(':scope > testsuite')];
       return {
         id: testsuite.getAttribute('id'),
         name: testsuite.getAttribute('name'),
@@ -54,14 +53,12 @@
         time: testsuite.getAttribute('time') ? parseFloat(testsuite.getAttribute('time'), 10) : null,
         timestamp: testsuite.getAttribute('timestamp') ? new Date(testsuite.getAttribute('timestamp')) : null,
         testcases: testcases.length ? parseTestcases(testcases) : [],
-        testsuite: testsuites.length ? parseTestsuite(testsuites) : []
       };
     });
   }
 
   function parseTestsuites(testsuitesNodes) {
     return testsuitesNodes.map(testsuites => {
-      const testcases = [...testsuites.querySelectorAll(':scope > testcase')];
       const testsuite = [...testsuites.querySelectorAll(':scope > testsuite')];
       return {
         id: testsuites.getAttribute('id'),
@@ -72,7 +69,6 @@
         disabled: testsuites.getAttribute('disabled') ? parseInt(testsuites.getAttribute('disabled'), 10) : null,
         time: testsuites.getAttribute('time') ? parseFloat(testsuites.getAttribute('time')) : null,
         testsuite: testsuite.length ? parseTestsuite(testsuite) : [],
-        testcases: testcases.length ? parseTestcases(testcases) : []
       };
     });
   }
@@ -80,20 +76,16 @@
   function convertToJson(xmlDoc) {
     const result = {
       testsuites: [],
-      testsuite: [],
-      testcases: []
     };
     const testsuitesNodes = [...xmlDoc.getElementsByTagName('testsuites')]
     if (testsuitesNodes && testsuitesNodes.length) {
       result.testsuites = parseTestsuites(testsuitesNodes);
     } else {
-      const testsuiteNodes = [...xmlDoc.querySelectorAll(':scope > testsuite')];
+      const testsuiteNodes = [...xmlDoc.querySelectorAll('testsuite')];
       if (testsuiteNodes && testsuiteNodes.length) {
-        result.testsuite = parseTestsuite(testsuiteNodes);
-      }
-      const testcaseNodes = [...xmlDoc.querySelectorAll(':scope > testcase')];
-      if (testcaseNodes && testcaseNodes.length) {
-        result.testcases = parseTestcases(testcaseNodes);
+        result.testsuites = Array({
+          testsuite: parseTestsuite(testsuiteNodes)
+        });
       }
     }
     return result;
@@ -111,22 +103,22 @@
     return isFailing ? tplFail() : tplSuccess();
   }
 
-  function tpl(result) {
-    return `
-      ${result.testsuites ? result.testsuites.map(testsuites => `
-        ${testsuites.name !== null ? `<h1>${testsuites.name}</h1>` : ''}
+  function tplHeader(testsuites) {
+    return `${testsuites.name !== null ? `<h1>${testsuites.name}</h1>` : ''}
         <h2>
           ${testsuites.tests !== null ? `Tests: <b>${testsuites.tests}</b>,` : ''}
           ${testsuites.failures !== null ? `Failures: <b>${testsuites.failures}</b>,` : ''}
           ${testsuites.errors !== null ? `Errors: <b>${testsuites.errors}</b>,` : ''}
           ${testsuites.time ? `<em>Time: ${testsuites.time}</em>`: ''}
         </h2>
-        ${tplTestsuite(testsuites.testsuite)}
-      `).join('') : ''}
-      ${result.testsuite ? tplTestsuite(result.testsuite) : ''}
-      ${result.testcases ? tplTestcases(result.testcases) : ''}
+      `;
+  }
 
-    `
+  function tpl(result) {
+    return result.testsuites.map(testsuites =>
+      `${testsuites.name ? tplHeader(testsuites) : ''}
+        ${tplTestsuite(testsuites.testsuite)}`
+    ).join('');
   }
 
   function isFailing(testObject) {
@@ -146,9 +138,11 @@
   }
 
   function tplTestsuite(testsuites) {
-    return testsuites && testsuites.length ? `
-      ${testsuites.map(testsuite => `
-        <details>
+    if (!testsuites || !testsuites.length) {
+      return '';
+    }
+    return testsuites.map(testsuite =>
+      `<details>
           <summary>
             ${tplResult(isFailing(testsuite))}
             ${testsuite.name !== null ? ` <span class="testsuite-name" title="${testsuite.name}">${testsuite.name}</span>` : ''}
@@ -159,16 +153,13 @@
             ${testsuite.time ? `<em>Time: ${testsuite.time}</em>`: ''}
           </summary>
           ${testsuite.testcases && testsuite.testcases.length ? `<div>${tplTestcases(testsuite.testcases)}</div>` : ''}
-          ${testsuite.testsuite && testsuite.testsuite.length ? `<div style="margin-left: 1em">${tplTestsuite(testsuite.testsuite)}</div>` : ''}
-          </details>
-        `).join('')}
-    ` :  '';
+      </details>`
+    ).join('');
   }
 
   function tplTestcases(testcases) {
-    return testcases && testcases.length ? `
-      ${testcases.map(testcase => `
-        <details style="margin-left: 1em">
+    return testcases.map(testcase =>
+      `<details style="margin-left: 1em">
           <summary>
             ${tplResult(isFailing(testcase))}
             <span class="testcase-name" title=" ${testcase.name ? testcase.name : ''} ${testcase.classname ? testcase.classname : ''}">
@@ -202,8 +193,8 @@
               ` : ''}
             </div>
           </div>
-        </details>
-      `).join('')}` : '';
+      </details>`
+    ).join('');
   }
 
   function refresh(event) {
