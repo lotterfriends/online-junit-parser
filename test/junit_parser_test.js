@@ -72,6 +72,9 @@
 
     chk("testcase 0", tcs[0].name, (v) => {return (v === 'generic/001')});
     chk("testcase 0 result", tcs[0].skipped, (v) => {return (v !== null)});
+    chk("testcase 0 msg", tcs[0].skipped.message,
+      (m) => {return (m.startsWith('this test requires a valid $TEST_DEV'))}
+    );
     chk("testcase 0 result", tcs[0].failure, (v) => {return (v === null)});
     chk("testcase 1", tcs[1].name, (v) => {return (v === 'generic/002')});
     chk("testcase 1 result", tcs[1].skipped, (v) => {return (v === null)});

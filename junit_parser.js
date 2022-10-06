@@ -160,7 +160,8 @@
     } else if (testcase.skipped) {
       o = {
         summary: `<span title="skipped">⏩</span>`,
-        details: ''
+        details: testcase.skipped.message ?
+          `<div>${testcase.skipped.message}</div>` : ''
       };
     } else {
       o = {
