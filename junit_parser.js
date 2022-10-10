@@ -120,8 +120,8 @@
     if (!testsuites || !testsuites.length) {
       return '';
     }
-    return testsuites.map(testsuite =>
-      `<details>
+    return testsuites.map((testsuite, ts_i) =>
+      `<details id="suite.${ts_i}">
         <summary>
           ${tplSuiteResult(testsuite)}
           ${testsuite.name !== null ? ` <span class="testsuite-name" title="${testsuite.name}">${testsuite.name}</span>` : ''}
@@ -131,12 +131,12 @@
           ${testsuite.skipped !== null ? `Skipped: <b>${testsuite.skipped}</b>,` : ''}
           ${testsuite.time ? `<em>Time: ${testsuite.time}</em>`: ''}
         </summary>
-        ${testsuite.testcases && testsuite.testcases.length ? `<div>${tplTestcases(testsuite.testcases)}</div>` : ''}
+        ${testsuite.testcases && testsuite.testcases.length ? `<div>${tplTestcases(ts_i, testsuite.testcases)}</div>` : ''}
       </details>`
     ).join('');
   }
 
-  function tplCaseResult(testcase) {
+  function tplCaseResult(testcase, tstc_id) {
     var o;
 
     if (testcase.failure) {
@@ -170,7 +170,7 @@
       };
     }
 
-    return `<details style="margin-left: 1em">
+    return `<details style="margin-left: 1em" id=${tstc_id}>
         <summary>
           ${o.summary}
           <span class="testcase-name" title=" ${testcase.name ? testcase.name : ''} ${testcase.classname ? testcase.classname : ''}">
@@ -195,8 +195,9 @@
       </details>`;
   }
 
-  function tplTestcases(testcases) {
-    return testcases.map(testcase => `${tplCaseResult(testcase)}`).join('');
+  function tplTestcases(ts_i, testcases) {
+    return testcases.map((testcase, tc_i) =>
+      `${tplCaseResult(testcase, 'case.' + ts_i + '.' + tc_i)}`).join('');
   }
 
   function refresh(event) {
