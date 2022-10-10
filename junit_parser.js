@@ -221,6 +221,187 @@
     fr.readAsText(evt.target.files[0]);
   }
 
+  function plotSvg(tss) {
+    var line_colors = [
+      '#00BFFF',  // DeepSkyBlue
+      '#98FB98',  // PaleGreen
+      '#FFFF00',  // Yellow
+      '#FFA07A',  // LightSalmon
+      '#F4A460',  // SandyBrown
+      '#FFB6C1',  // LightPink
+      '#ADD8E6',  // LightBlue
+      '#DDA0DD',  // Plum
+    ];
+
+    function node(el, attrs) {
+      const e = document.createElementNS("http://www.w3.org/2000/svg", el);
+      for (var i in attrs) {
+        e.setAttributeNS(null, i, attrs[i]);
+      }
+      return e;
+    }
+
+    function plotInit(suite_name) {
+      const svg = document.createElementNS("http://www.w3.org/2000/svg",
+        'svg');
+      svg.setAttribute('width', '100%');
+      svg.setAttribute('height', '500');
+      svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+
+      var n = node('rect', { width: '100%', height: '100%', fill: 'black' });
+      svg.appendChild(n);  // background
+
+      [ 'passed', 'skipped', 'failed' ].forEach((bucket, i) => {
+        const rect_y = i * 100 + 96;  // dividers for pass, skip & fail buckets
+        const tx_y = rect_y + 94;
+        var g = node('g', {});
+        n = node('title', {});
+        n.appendChild(document.createTextNode(`${bucket} tests`));
+        g.appendChild(n);
+        n = node('rect', { x: '0', y: rect_y, width: '100%', height: '102',
+            'stroke-dasharray': '4', stroke: 'grey', 'stroke-width': '2' });
+        g.appendChild(n);
+        n = node('text', { x: '90%', y: tx_y, 'font-size': '14', fill: 'grey'});
+        n.appendChild(document.createTextNode(bucket));
+        g.appendChild(n);
+        svg.appendChild(g);
+      });
+
+      n = node('text', { x: '50%', y: '28', 'text-anchor': 'middle',
+        'font-size': '28', fill: 'white' });
+      svg.appendChild(n);
+      n.appendChild(
+        document.createTextNode(`Results for Test Suite ${suite_name}`)
+      );
+      svg.appendChild(n);
+
+      return svg;
+    }
+
+    function plotSuite(ts_i, suite, svg_suite_state) {
+      const svg = svg_suite_state.svg;
+      const xinc = 20;
+      // path line joins up all points
+      var line = null;
+      var tc_name_coordmap = svg_suite_state.case_coordmap;
+      var xcoord = svg_suite_state.xcoord_next;
+      var ycoord
+      for (let i = 0; i < suite.testcases.length; i++) {
+        const tc = suite.testcases[i];
+        var rfill;
+        var title = null;
+
+        if (tc.failure) {
+          title = tc.failure.message;
+          rfill = "rgba(212, 22, 16)"; // red
+          ycoord = 300;
+        } else if (tc.error) {
+          rfill = "rgba(228, 232, 19)"; // yellow
+          ycoord = 300;
+        } else if (tc.skipped) {
+          title = tc.skipped.message;
+          rfill = "rgba(29, 85, 176)"; // blue
+          ycoord = 200;
+        } else {
+          title = tc.time ? `passed with time: ${tc.time}` : null;
+          rfill = "rgba(53, 176, 34)"; // green
+          ycoord = 100;
+        }
+
+        if (tc_name_coordmap[tc.name]) {
+          // reuse pre-existing testcase name on x-axis
+          xcoord_next = xcoord;
+          xcoord = tc_name_coordmap[tc.name].xcoord;
+          // stagger y-coord for duplicate test results, so points aren't overlaid.
+          // only stagger y-coord if result was the same
+          while (ycoord in tc_name_coordmap[tc.name].ycoords) {
+            ycoord += 15; // XXX could overshoot 100px bucket size
+          }
+          tc_name_coordmap[tc.name].ycoords[ycoord] = {};
+        } else {
+          xcoord_next = xcoord + xinc;
+          tc_name_coordmap[tc.name] = {
+            xcoord: xcoord,
+            ycoords: {[ycoord]: {}}
+          };
+          text_ycoord = svg.clientHeight;
+          n = node('text', {x: 0, y: 0, 'font-size': '14', fill: 'white',
+            transform: `translate(${xcoord + 10},${text_ycoord}) rotate(-90)`});
+          n.appendChild(document.createTextNode(tc.name));
+          svg.appendChild(n);
+        }
+
+        var g = node('g', {});
+        if (title) {
+          n = node('title', {});
+          n.appendChild(document.createTextNode(title));
+          g.appendChild(n);
+        }
+        n = node('rect', { x: xcoord, y: ycoord, width: 10, height: 10,
+          fill: rfill, 'fill-opacity': '0.8', class: 'plot-rect' });
+
+        n.addEventListener('click', (e) => {
+          var detailel = document.getElementById('suite.' + ts_i);
+          detailel.setAttribute('open', true);
+          detailel = document.getElementById('case.' + ts_i + '.' + i);
+          detailel.setAttribute('open', true);
+          detailel.scrollIntoView();
+        });
+        g.appendChild(n);
+        svg.appendChild(g);
+
+        if (!line) {
+          // +5 for middle of rect
+          line = { d: `M ${xcoord + 5} ${ycoord + 5}`, first_rect: n };
+        } else {
+          line.d += ` L ${xcoord + 5} ${ycoord + 5}`;
+        }
+
+        xcoord = xcoord_next;
+      }
+
+      // subsequent name-matched suites could reuse. Append new tests from where
+      // we left off.
+      svg_suite_state.xcoord_next = xcoord;
+
+      if (line) {
+        const color = line_colors[svg_suite_state.color_i % line_colors.length];
+        n = node('path',  // path connecting all points
+          { fill: 'none', stroke: color, 'stroke-width': '3', d: line.d });
+        line.first_rect.before(n);
+      }
+      //svg.setAttribute('viewBox', `0 0 ${xcoord} ${ymax + 15}`);
+    }
+
+    const plotDiv = document.getElementById("plotVector");
+    plotDiv.replaceChildren();
+    if (tss.length < 1) {
+      return;
+    }
+
+    var suite;
+    var ts_i;
+    // plot matching testsuites on the same graph, reusing common x-axis points
+    var svg_suite_state = {};
+    tss[0].testsuite.forEach((suite, ts_i) => {
+      if (suite.name in svg_suite_state) {
+        svg_suite_state[suite.name].color_i++;
+      } else {
+        const svg = plotInit(suite.name);
+        plotDiv.appendChild(svg);
+        svg_suite_state[suite.name] = {
+          'svg': svg,
+          xcoord_next: 5,
+          case_coordmap: {},
+          color_i: 0
+        };
+      }
+
+      plotSuite(ts_i, suite, svg_suite_state[suite.name]);
+    });
+
+  }
+
   function parseText(text) {
     const parser = new DOMParser();
     const xmlDoc = parser.parseFromString(text.trim(),"text/xml");
@@ -228,6 +409,7 @@
     document.querySelector('textarea.json').value = JSON.stringify(resultAsJson, null,2);
     document.querySelector('#result').innerHTML = tpl(resultAsJson);
     document.querySelector('textarea.html').value = document.querySelector('#result').innerHTML.trim();
+    plotSvg(resultAsJson.testsuites);
   }
 
   function init() {
