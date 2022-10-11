@@ -337,16 +337,12 @@
           n.appendChild(document.createTextNode(title));
           g.appendChild(n);
         }
-        n = node('rect', { x: xcoord, y: ycoord, width: 10, height: 10,
-          fill: rfill, 'fill-opacity': '0.8', class: 'plot-rect' });
+        n = node('a', { href: `#case.${ts_i}.${i}` });
+        n.appendChild(
+          node('rect', { x: xcoord, y: ycoord, width: 10, height: 10,
+          fill: rfill, 'fill-opacity': '0.8', class: 'plot-rect' })
+        );
 
-        n.addEventListener('click', (e) => {
-          var detailel = document.getElementById('suite.' + ts_i);
-          detailel.setAttribute('open', true);
-          detailel = document.getElementById('case.' + ts_i + '.' + i);
-          detailel.setAttribute('open', true);
-          detailel.scrollIntoView();
-        });
         g.appendChild(n);
         svg.appendChild(g);
 
@@ -426,6 +422,16 @@
       document.querySelector('textarea.xml').value = lsXml;
       parseText(lsXml);
     }
+    // #case.$testsuite_id.$testcase_id URL opens and scrolls to details
+    window.addEventListener('hashchange', () => {
+      var hel = document.getElementById(document.location.hash.substr(1));
+      for (el = hel; el; el = el.parentElement) {
+        if (el.open === false) {
+          el.setAttribute('open', true);
+        }
+      }
+      hel.scrollIntoView();
+    }, false);
   }
 
   init();
