@@ -303,7 +303,7 @@
           rfill = "rgba(29, 85, 176)"; // blue
           ycoord = 200;
         } else {
-          title = tc.time ? `passed with time: ${tc.time}` : null;
+          title = tc.time ? `passed with time ${tc.time}` : null;
           rfill = "rgba(53, 176, 34)"; // green
           ycoord = 100;
         }
@@ -332,11 +332,10 @@
         }
 
         var g = node('g', {});
-        if (title) {
-          n = node('title', {});
-          n.appendChild(document.createTextNode(title));
-          g.appendChild(n);
-        }
+        n = node('title', {});
+        n.appendChild(
+          document.createTextNode(`${tc.name}${title ? ': ' + title : ''}`));
+        g.appendChild(n);
         n = node('a', { href: `#case.${ts_i}.${i}` });
         n.appendChild(
           node('rect', { x: xcoord, y: ycoord, width: 10, height: 10,
