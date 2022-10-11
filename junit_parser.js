@@ -244,8 +244,6 @@
     function plotInit(suite_name) {
       const svg = document.createElementNS("http://www.w3.org/2000/svg",
         'svg');
-      svg.setAttribute('width', '100%');
-      svg.setAttribute('height', '500');
       svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
 
       var n = node('rect', { width: '100%', height: '100%', fill: 'black' });
@@ -261,7 +259,8 @@
         n = node('rect', { x: '0', y: rect_y, width: '100%', height: '102',
             'stroke-dasharray': '4', stroke: 'grey', 'stroke-width': '2' });
         g.appendChild(n);
-        n = node('text', { x: '90%', y: tx_y, 'font-size': '14', fill: 'grey'});
+        n = node('text', { x: '99%', y: tx_y, 'font-size': '12', fill: 'grey',
+          'text-anchor': 'end'});
         n.appendChild(document.createTextNode(bucket));
         g.appendChild(n);
         svg.appendChild(g);
@@ -280,7 +279,7 @@
 
     function plotSuite(ts_i, suite, svg_suite_state) {
       const svg = svg_suite_state.svg;
-      const xinc = 20;
+      const xinc = 15;
       // path line joins up all points
       var line = null;
       var tc_name_coordmap = svg_suite_state.case_coordmap;
@@ -324,8 +323,8 @@
             xcoord: xcoord,
             ycoords: {[ycoord]: {}}
           };
-          text_ycoord = svg.clientHeight;
-          n = node('text', {x: 0, y: 0, 'font-size': '14', fill: 'white',
+          text_ycoord = 500;
+          n = node('text', {x: 0, y: 0, 'font-size': '12', fill: 'white',
             transform: `translate(${xcoord + 10},${text_ycoord}) rotate(-90)`});
           n.appendChild(document.createTextNode(tc.name));
           svg.appendChild(n);
@@ -365,7 +364,9 @@
           { fill: 'none', stroke: color, 'stroke-width': '3', d: line.d });
         line.first_rect.before(n);
       }
-      //svg.setAttribute('viewBox', `0 0 ${xcoord} ${ymax + 15}`);
+
+      svg.setAttribute("width", xcoord);  // resize to fit bounds
+      svg.setAttribute("height", '500');
     }
 
     const plotDiv = document.getElementById("plotVector");
