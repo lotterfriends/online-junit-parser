@@ -241,7 +241,7 @@
       return e;
     }
 
-    function plotInit(suite_name) {
+    function plotInit(plotDiv, suite_name) {
       const svg = document.createElementNS("http://www.w3.org/2000/svg",
         'svg');
       svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
@@ -273,6 +273,11 @@
         document.createTextNode(`Results for Test Suite ${suite_name}`)
       );
       svg.appendChild(n);
+      plotDiv.appendChild(svg);
+
+      // initial dimensions based on chart title. Width may be extended later.
+      svg.setAttribute('width', svg.getBBox().width + 10);
+      svg.setAttribute('height', '500');
 
       return svg;
     }
@@ -365,8 +370,9 @@
         line.first_rect.before(n);
       }
 
-      svg.setAttribute("width", xcoord);  // resize to fit bounds
-      svg.setAttribute("height", '500');
+      if (xcoord > svg.getAttribute('width')) {
+        svg.setAttribute('width', xcoord);  // resize to fit bounds
+      }
     }
 
     const plotDiv = document.getElementById("plotVector");
@@ -383,7 +389,7 @@
       if (suite.name in svg_suite_state) {
         svg_suite_state[suite.name].color_i++;
       } else {
-        const svg = plotInit(suite.name);
+        const svg = plotInit(plotDiv, suite.name);
         plotDiv.appendChild(svg);
         svg_suite_state[suite.name] = {
           'svg': svg,
