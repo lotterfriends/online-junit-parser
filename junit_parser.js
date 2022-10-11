@@ -352,7 +352,7 @@
 
         if (!line) {
           // +5 for middle of rect
-          line = { d: `M ${xcoord + 5} ${ycoord + 5}`, first_rect: n };
+          line = { d: `M ${xcoord + 5} ${ycoord + 5}`, first_rect: g };
         } else {
           line.d += ` L ${xcoord + 5} ${ycoord + 5}`;
         }
