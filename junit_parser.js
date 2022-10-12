@@ -390,7 +390,6 @@
         svg_suite_state[suite.name].color_i++;
       } else {
         const svg = plotInit(plotDiv, suite.name);
-        plotDiv.appendChild(svg);
         svg_suite_state[suite.name] = {
           'svg': svg,
           xcoord_next: 5,
