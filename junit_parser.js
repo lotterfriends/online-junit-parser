@@ -287,7 +287,6 @@
       const xinc = 15;
       // path line joins up all points
       var line = null;
-      var tc_name_coordmap = svg_suite_state.case_coordmap;
       var xcoord = svg_suite_state.xcoord_next;
       var ycoord
       for (let i = 0; i < suite.testcases.length; i++) {
@@ -312,28 +311,22 @@
           ycoord = 100;
         }
 
-        if (tc_name_coordmap[tc.name]) {
+        if (tc.name in svg_suite_state.case_xcoords) {
           // reuse pre-existing testcase name on x-axis
           xcoord_next = xcoord;
-          xcoord = tc_name_coordmap[tc.name].xcoord;
-          // stagger y-coord for duplicate test results, so points aren't overlaid.
-          // only stagger y-coord if result was the same
-          while (ycoord in tc_name_coordmap[tc.name].ycoords) {
-            ycoord += 15; // XXX could overshoot 100px bucket size
-          }
-          tc_name_coordmap[tc.name].ycoords[ycoord] = {};
+          xcoord = svg_suite_state.case_xcoords[tc.name];
         } else {
           xcoord_next = xcoord + xinc;
-          tc_name_coordmap[tc.name] = {
-            xcoord: xcoord,
-            ycoords: {[ycoord]: {}}
-          };
+          svg_suite_state.case_xcoords[tc.name] = xcoord;
           text_ycoord = 500;
           n = node('text', {x: 0, y: 0, 'font-size': '12', fill: 'white',
             transform: `translate(${xcoord + 10},${text_ycoord}) rotate(-90)`});
           n.appendChild(document.createTextNode(tc.name));
           svg.appendChild(n);
         }
+        // stagger y-coords across suites plotted on the same axis, so points
+        // aren't overlaid.
+        ycoord += (15 * svg_suite_state.plot_i);
 
         var g = node('g', {});
         n = node('title', {});
@@ -364,7 +357,7 @@
       svg_suite_state.xcoord_next = xcoord;
 
       if (line) {
-        const color = line_colors[svg_suite_state.color_i % line_colors.length];
+        const color = line_colors[svg_suite_state.plot_i % line_colors.length];
         n = node('path',  // path connecting all points
           { fill: 'none', stroke: color, 'stroke-width': '3', d: line.d });
         line.first_rect.before(n);
@@ -387,14 +380,14 @@
     var svg_suite_state = {};
     tss[0].testsuite.forEach((suite, ts_i) => {
       if (suite.name in svg_suite_state) {
-        svg_suite_state[suite.name].color_i++;
+        svg_suite_state[suite.name].plot_i++;
       } else {
         const svg = plotInit(plotDiv, suite.name);
         svg_suite_state[suite.name] = {
           'svg': svg,
           xcoord_next: 5,
-          case_coordmap: {},
-          color_i: 0
+          case_xcoords: {},
+          plot_i: 0 // per-plot increment for this suite
         };
       }
 
