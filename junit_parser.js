@@ -344,9 +344,9 @@
 
         if (!line) {
           // +5 for middle of rect
-          line = { d: `M ${xcoord + 5} ${ycoord + 5}`, first_rect: g };
+          line = `M ${xcoord + 5} ${ycoord + 5}`;
         } else {
-          line.d += ` L ${xcoord + 5} ${ycoord + 5}`;
+          line += ` L ${xcoord + 5} ${ycoord + 5}`;
         }
 
         xcoord = xcoord_next;
@@ -359,8 +359,9 @@
       if (line) {
         const color = line_colors[svg_suite_state.plot_i % line_colors.length];
         n = node('path',  // path connecting all points
-          { fill: 'none', stroke: color, 'stroke-width': '3', d: line.d });
-        line.first_rect.before(n);
+          { fill: 'none', stroke: color, 'stroke-width': '3', d: line });
+        svg_suite_state.line_sibling.after(n);
+        svg_suite_state.line_sibling = n;
       }
 
       if (xcoord > svg.getAttribute('width')) {
@@ -387,7 +388,8 @@
           'svg': svg,
           xcoord_next: 5,
           case_xcoords: {},
-          plot_i: 0 // per-plot increment for this suite
+          plot_i: 0,  // per-plot increment for this suite
+          line_sibling: svg.lastChild // append line plots after bg and banner
         };
       }
 
