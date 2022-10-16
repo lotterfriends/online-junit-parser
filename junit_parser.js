@@ -131,7 +131,7 @@
           ${testsuite.skipped !== null ? `Skipped: <b>${testsuite.skipped}</b>,` : ''}
           ${testsuite.time ? `<em>Time: ${testsuite.time}</em>`: ''}
         </summary>
-        ${testsuite.testcases && testsuite.testcases.length ? `<div>${tplTestcases(ts_i, testsuite.testcases)}</div>` : ''}
+        ${tplTestcases(ts_i, testsuite.testcases)}
       </details>`
     ).join('');
   }
@@ -196,8 +196,12 @@
   }
 
   function tplTestcases(ts_i, testcases) {
-    return testcases.map((testcase, tc_i) =>
-      `${tplCaseResult(testcase, 'case.' + ts_i + '.' + tc_i)}`).join('');
+    if (!testcases || !testcases.length) {
+      return ''
+    }
+    return '<div>' + testcases.map((testcase, tc_i) =>
+      `${tplCaseResult(testcase, 'case.' + ts_i + '.' + tc_i)}`).join('')
+      + '</div>';
   }
 
   function refresh(event) {
