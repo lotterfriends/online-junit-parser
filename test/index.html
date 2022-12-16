@@ -16,11 +16,12 @@
     em { font-size: .75em; }
     .testsuite-name, .testcase-name { max-width: 400px;overflow: hidden;display: inline-block;white-space: nowrap;text-overflow: ellipsis;vertical-align: middle; }
     .testcase-name { max-width:  600px;}
-  </style>
+  </style>  <link rel="stylesheet" href="css/normalize.min.css" type="text/css">
+  <link rel="stylesheet" href="css/sakura-dark.min.css" type="text/css">
+  <link rel="stylesheet" href="css/style.css" type="text/css">
 </head>
-
 <body>
-
+  <div id="plotVector" width="100%"></div>
   <h1>JUnit Parser Selftest</h1>
 
   <details>
@@ -32,28 +33,35 @@
       <input type="file" id="file" name="file" accept="application/xml"
         title="Load JUnit XML from file" />
     </div>
-
-    <details>
-      <summary>JSON</summary>
+  <details>
+    <summary>JSON</summary>
+    <div>
+      <a class="copy-link" onclick="copyTextToClipboard(document.querySelector('textarea.json'))" href="#">Copy to Clipboard</a>
       <textarea class="json" placeholder="JSON" rows="15" readonly></textarea>
-    </details>
-
-    <details>
-      <summary>HTML</summary>
-      <div>
-        <textarea class="html" placeholder="HTML" rows="15" readonly></textarea>
-      </div>
-    </details>
-
-    <div id="result"></div>
-    <div id="settings">
+    </div>
+  </details>
+  <details>
+    <summary>HTML</summary>
+    <div>
+      <a class="copy-link" onclick="copyTextToClipboard(document.querySelector('textarea.html'))" href="#">Copy to Clipboard</a>
+      <textarea class="html" placeholder="HTML" rows="15" readonly></textarea>
+    </div>
+  </details>
+  <div id="result"></div>
+  <div id="settings">
+    <h5>Settings</h5>
+    <div>
       <input name="settingErrorIsFailure" id="settingErrorIsFailure" type="checkbox" checked>
       <label style="display: inline" for="settingErrorIsFailure">Treat errors as if they were failures.</label>
     </div>
-  </details>
+    <div>
+      <input name="settingPlotResult" id="settingPlotResult" type="checkbox">
+      <label style="display: inline" for="settingPlotResult">Plot result</label>
+    </div>
+  </div>
+</details>
 
-  <textarea id="testlog" placeholder="selftest log" readonly></textarea>
-
+<textarea id="testlog" placeholder="selftest log" readonly></textarea>
   <script>localStorage.setItem('xml', '')</script>
   <script src="../junit_parser.js"></script>
   <script src="junit_parser_test.js"></script>

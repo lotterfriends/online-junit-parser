@@ -21,6 +21,7 @@ function generate_index_tpl {
   cat templates/header-css-min.html
   cat templates/header-end.html
   cat templates/body-start.html
+  cat templates/body-main-header.html
   cat templates/body-plot.html
   cat templates/body-junit-input.html
   cat templates/body-out-json.html
