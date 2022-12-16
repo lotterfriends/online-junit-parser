@@ -100,15 +100,15 @@
       </h2>`;
   }
 
-  function tpl(result) {
+  function tpl(result, clean) {
     return result.testsuites.map(testsuites =>
       `${testsuites.name ? tplHeader(testsuites) : ''}
-      ${tplTestsuite(testsuites.testsuite)}`
+      ${tplTestsuite(testsuites.testsuite, clean)}`
     ).join('');
   }
 
   function tplSuiteResult(testsuite) {
-    const errorIsFailure = document.getElementById('settingErrorIsFailure').checked;
+    const errorIsFailure = getSetting('ErrorIsFailure');;
     if ((testsuite.failures > 0)
       || (errorIsFailure && testsuite.errors && testsuite.errors > 0)) {
       return `<span style="color: red">⛔</span>`;
@@ -116,13 +116,13 @@
     return `<span style="color: green">✅</span>`;
   }
 
-  function tplTestsuite(testsuites) {
+  function tplTestsuite(testsuites, clean) {
     if (!testsuites || !testsuites.length) {
       return '';
     }
     return testsuites.map((testsuite, ts_i) =>
       `<details id="suite.${ts_i}">
-        <summary>
+        <summary ${clean ? '' : `onclick="updateUrl('suite.${ts_i}')"`}>
           ${tplSuiteResult(testsuite)}
           ${testsuite.name !== null ? ` <span class="testsuite-name" title="${testsuite.name}">${testsuite.name}</span>` : ''}
           ${testsuite.tests !== null ? `Tests: <b>${testsuite.tests}</b>,` : ''}
@@ -131,14 +131,13 @@
           ${testsuite.skipped !== null ? `Skipped: <b>${testsuite.skipped}</b>,` : ''}
           ${testsuite.time ? `<em>Time: ${testsuite.time}</em>`: ''}
         </summary>
-        ${tplTestcases(ts_i, testsuite.testcases)}
+        ${tplTestcases(ts_i, testsuite.testcases, clean)}
       </details>`
     ).join('');
   }
 
-  function tplCaseResult(testcase, tstc_id) {
+  function tplCaseResult(testcase, tstc_id, clean) {
     var o;
-
     if (testcase.failure) {
       o = {
         summary: `<span title="failed" style="color: red">⛔</span>`,
@@ -151,7 +150,7 @@
             </div>`
       };
     } else if (testcase.error) {
-      const isF = document.getElementById('settingErrorIsFailure').checked;
+      const isF = getSetting('ErrorIsFailure');
       o = {
         summary: `<span title="errored" style="color: ${isF ? `red">⛔` : `green">✅`}</span>`,
         details: testcase.error.length ?
@@ -169,9 +168,8 @@
         details: ''
       };
     }
-
     return `<details style="margin-left: 1em" id=${tstc_id}>
-        <summary>
+        <summary ${clean ? '': `onclick="updateUrl('${tstc_id}')"`}>
           ${o.summary}
           <span class="testcase-name" title=" ${testcase.name ? testcase.name : ''} ${testcase.classname ? testcase.classname : ''}">
             ${testcase.name ? testcase.name : ''}
@@ -179,7 +177,7 @@
           </span>
           <em>${testcase.time}</em>
         </summary>
-        <div style="margin-left: 1em">
+        <div style="margin-left: 1em" >
           ${o.details}
           <div>
             ${testcase.systemOut && testcase.systemOut.length ? `
@@ -195,20 +193,20 @@
       </details>`;
   }
 
-  function tplTestcases(ts_i, testcases) {
+  function tplTestcases(ts_i, testcases, clean) {
     if (!testcases || !testcases.length) {
       return ''
     }
     return '<div>' + testcases.map((testcase, tc_i) =>
-      `${tplCaseResult(testcase, 'case.' + ts_i + '.' + tc_i)}`).join('')
+      `${tplCaseResult(testcase, `case.${ts_i}.${tc_i}`, clean)}`).join('')
       + '</div>';
   }
 
   function refresh(event) {
     const text = document.querySelector('textarea.xml').value;
     localStorage.setItem('xml', text);
-    localStorage.setItem('settingErrorIsFailure',
-      `${document.getElementById('settingErrorIsFailure').checked}`);
+    saveSettingInStorage('ErrorIsFailure');
+    saveSettingInStorage('PlotResult');
     parseText(text);
   }
 
@@ -226,7 +224,7 @@
   }
 
   function plotSvg(tss) {
-    var line_colors = [
+    const line_colors = [
       '#00BFFF',  // DeepSkyBlue
       '#98FB98',  // PaleGreen
       '#FFFF00',  // Yellow
@@ -379,8 +377,6 @@
       return;
     }
 
-    var suite;
-    var ts_i;
     // plot matching testsuites on the same graph, reusing common x-axis points
     var svg_suite_state = {};
     tss[0].testsuite.forEach((suite, ts_i) => {
@@ -408,34 +404,87 @@
     const resultAsJson = convertToJson(xmlDoc);
     document.querySelector('textarea.json').value = JSON.stringify(resultAsJson, null,2);
     document.querySelector('#result').innerHTML = tpl(resultAsJson);
-    document.querySelector('textarea.html').value = document.querySelector('#result').innerHTML.trim();
-    plotSvg(resultAsJson.testsuites);
+    document.querySelector('textarea.html').value = tpl(resultAsJson, true).trim();
+    const plotResuls = getSetting('PlotResult');
+    if (plotResuls) {
+      plotSvg(resultAsJson.testsuites);
+    } else {
+      plotSvg([]);
+    }
+  }
+
+  // #case.$testsuite_id.$testcase_id URL opens and scrolls to details
+  function scrollTestInView() {
+    if (document.location.hash) {
+      const hel = document.getElementById(document.location.hash.substring(1));
+      if (hel) {
+        for (el = hel; el; el = el.parentElement) {
+          if (el.open === false) {
+            el.setAttribute('open', true);
+          }
+        }
+        hel.scrollIntoView();
+      }
+    }
+  }
+
+  function getSetting(name, defaultValue) {
+    let setting = typeof defaultValue !== 'undefined' ? defaultValue : false;
+    const settingName = `setting${name}`;
+    // from dom
+    const elm = document.getElementById(settingName);
+    if (elm) {
+      setting = elm.checked;
+    }
+    // overwrite with storage
+    const strg = localStorage.getItem(settingName);
+    if (strg) {
+      setting = strg === 'true';
+    }
+    // update dom with storage
+    if (elm && strg) {
+      if (elm.checked !== setting) {
+        elm.checked = setting;
+      }
+    }
+    return setting;
+  }
+
+  function saveSettingInStorage(name, settingValue) {
+    const settingName = `setting${name}`;
+    const elm = document.getElementById(settingName);
+    if (elm) {
+      settingValue = elm.checked;
+    }
+    const strg = localStorage.setItem(settingName, settingValue ? settingValue : false);
+  }
+
+  function addCustomEventListener(selector, event, listener) {
+    const elm = document.querySelector(selector);
+    if (elm) {
+      elm.addEventListener(event, listener);
+    }
   }
 
   function init() {
-    document.querySelector('textarea.xml').addEventListener('change', refresh);
-    document.querySelector('#settingErrorIsFailure').addEventListener('change', refresh);
-    document.querySelector('#file').addEventListener('change', processFile);
-    const settingErrorIsFailureStorage = localStorage.getItem('settingErrorIsFailure');
-    const settingErrorIsFailur = false;
-    if (settingErrorIsFailureStorage && settingErrorIsFailureStorage === 'true') {
-      document.getElementById('settingErrorIsFailure').checked = true;
-    }
+    addCustomEventListener('textarea.xml', 'change', refresh);
+    addCustomEventListener('#settingErrorIsFailure', 'change', refresh);
+    addCustomEventListener('#settingPlotResult', 'change', refresh);
+    addCustomEventListener('#file', 'change', processFile);
+    getSetting('ErrorIsFailure', true);
+    getSetting('PlotResult', false);
+
     const lsXml = localStorage.getItem('xml');
     if (lsXml) {
       document.querySelector('textarea.xml').value = lsXml;
       parseText(lsXml);
     }
-    // #case.$testsuite_id.$testcase_id URL opens and scrolls to details
-    window.addEventListener('hashchange', () => {
-      var hel = document.getElementById(document.location.hash.substr(1));
-      for (el = hel; el; el = el.parentElement) {
-        if (el.open === false) {
-          el.setAttribute('open', true);
-        }
-      }
-      hel.scrollIntoView();
-    }, false);
+    scrollTestInView();
+    updateUrl = (id) => {
+      window.location.hash = `#${id}`;
+      return false;
+    }
+  
   }
 
   init();

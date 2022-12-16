@@ -1,0 +1,15 @@
+body { max-width: 55em; }
+textarea { font-size: 12px; }
+pre { font-size: .75em; }
+em { font-size: .75em; }
+.testsuite-name, .testcase-name { max-width: 400px;overflow: hidden;display: inline-block;white-space: nowrap;text-overflow: ellipsis;vertical-align: middle; }
+.testcase-name { max-width:  600px;}
+.copy-link { float:right; margin-top: -2em;}
+.plot-rect {
+  opacity: 0.8;
+}
+.plot-rect:hover {
+  opacity: 1;
+  fill: #FFFFFF;
+  cursor: pointer;
+}

@@ -1,32 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="normalize.css" type="text/css">
-  <link rel="stylesheet" href="sakura-dark.css" type="text/css">
   <title>JUnit Parser</title>
   <meta name="description" content="A JUnit parser, visualizer and format converter">
   <meta name="keywords" content="JUnit, JSON, Parser">
   <meta name="author" content="André Tarnowsky">
-  <style>
-    body { max-width: 55em; }
-    textarea { font-size: 12px; }
-    pre { font-size: .75em; }
-    em { font-size: .75em; }
-    .testsuite-name, .testcase-name { max-width: 400px;overflow: hidden;display: inline-block;white-space: nowrap;text-overflow: ellipsis;vertical-align: middle; }
-    .testcase-name { max-width:  600px;}
-    .copy-link { float:right; margin-top: -2em;}
-    .plot-rect {
-      opacity: 0.8;
-    }
-    .plot-rect:hover {
-      opacity: 1;
-      fill: #FFFFFF;
-      cursor: pointer;
-    }
-  </style>
+  <link rel="stylesheet" href="css/normalize.min.css" type="text/css">
+  <link rel="stylesheet" href="css/sakura-dark.min.css" type="text/css">
+  <link rel="stylesheet" href="css/style.css" type="text/css">
 </head>
 <body>
 
@@ -60,8 +44,15 @@
 
   <div id="result"></div>
   <div id="settings">
-    <input name="settingErrorIsFailure" id="settingErrorIsFailure" type="checkbox" checked>
-    <label style="display: inline" for="settingErrorIsFailure">Treat errors as if they were failures.</label>
+    <h5>Settings</h5>
+    <div>
+      <input name="settingErrorIsFailure" id="settingErrorIsFailure" type="checkbox" checked>
+      <label style="display: inline" for="settingErrorIsFailure">Treat errors as if they were failures.</label>
+    </div>
+    <div>
+      <input name="settingPlotResult" id="settingPlotResult" type="checkbox">
+      <label style="display: inline" for="settingPlotResult">Plot result</label>
+    </div>
   </div>
   <script src="junit_parser.js"></script>
 </body>
